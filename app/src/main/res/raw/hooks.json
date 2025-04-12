@@ -1,0 +1,11 @@
+[
+  {
+    "className": "javax.crypto.spec.SecretKeySpec",
+    "parametersType": ["byte[]", "java.lang.String"]
+  },
+  {
+    "className": "javax.crypto.Mac",
+    "methodName": "doFinal",
+    "parametersType": ["byte[]"]
+  }
+]
