@@ -55,9 +55,10 @@ public class XPosedModule implements IXposedHookLoadPackage {
                 // TODO: generalize this check with other types
                 if (parameterType.equals("byte[]")) {
                     parametersAndHook[i] = byte[].class;
+                } else {
+                    // in case there's not a reference of the class it will be specified as a string
+                    parametersAndHook[i] = parameterType;
                 }
-                // in case there's not a reference of the class it will be specified as a string
-                parametersAndHook[i] = parameterType;
             }
         }
         addCallback(parametersAndHook);
