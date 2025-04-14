@@ -53,11 +53,16 @@ public class XPosedModule implements IXposedHookLoadPackage {
                 parametersAndHook[i] = Class.forName(parameterType);
             } catch (ClassNotFoundException e) {
                 // TODO: generalize this check with other types
-                if (parameterType.equals("byte[]")) {
-                    parametersAndHook[i] = byte[].class;
-                } else {
-                    // in case there's not a reference of the class it will be specified as a string
-                    parametersAndHook[i] = parameterType;
+                switch (parameterType) {
+                    case "byte[]":
+                        parametersAndHook[i] = byte[].class;
+                        break;
+                    case "long":
+                        parametersAndHook[i] = long.class;
+                        break;
+                    default:
+                        // in case there's not a reference of the class it will be specified as a string
+                        parametersAndHook[i] = parameterType;
                 }
             }
         }
