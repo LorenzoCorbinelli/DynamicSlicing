@@ -49,21 +49,17 @@ public class XPosedModule implements IXposedHookLoadPackage {
         for (int i = 0; i < jsonParameters.length(); i++) {
             // take ech parameterType as string
             String parameterType = jsonParameters.getString(i);
-            try {
-                parametersAndHook[i] = Class.forName(parameterType);
-            } catch (ClassNotFoundException e) {
-                // TODO: generalize this check with other types
-                switch (parameterType) {
-                    case "byte[]":
-                        parametersAndHook[i] = byte[].class;
-                        break;
-                    case "long":
-                        parametersAndHook[i] = long.class;
-                        break;
-                    default:
-                        // in case there's not a reference of the class it will be specified as a string
-                        parametersAndHook[i] = parameterType;
-                }
+            // TODO: generalize this check with other types
+            switch (parameterType) {
+                case "byte[]":
+                    parametersAndHook[i] = byte[].class;
+                    break;
+                case "long":
+                    parametersAndHook[i] = long.class;
+                    break;
+                default:
+                    // in case is not a primitive type, the class is specified as a string
+                    parametersAndHook[i] = parameterType;
             }
         }
         addCallback(parametersAndHook);
