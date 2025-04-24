@@ -20,6 +20,42 @@ import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
+/*
+  {
+    "className": "java.net.URL",
+    "methodName": "openStream",
+    "parametersType": []
+  }
+  {
+    "className": "android.net.Uri.Builder",
+    "methodName": "build",
+    "parametersType": []
+  }
+  {
+    "className": "okhttp3.OkHttpClient",
+    "methodName": "newCall",
+    "parametersType": ["okhttp3.Request"]
+  }
+  {
+    "className": "javax.crypto.spec.SecretKeySpec",
+    "parametersType": ["byte[]", "java.lang.String"]
+  }
+  {
+    "className": "javax.crypto.Mac",
+    "methodName": "init",
+    "parametersType": ["java.security.Key"]
+  }
+  {
+    "className": "javax.crypto.Mac",
+    "methodName": "doFinal",
+    "parametersType": ["byte[]"]
+  }
+ */
+
+// TODO: rivedere per i tipi generici e probabilmente togliere lo switch
+// TODO: modificare i log in modo da avere una struttura più a codice del tipo: tipo di ritorno - metodo(args)
+// TODO: tool che salva i log in un file: prende solo i log utili togliendo il resto. Controllare Log
+//  che probabilmente ha un metodo che stampa meno informazioni rispetto a debug (d)
 
 public class XPosedModule implements IXposedHookLoadPackage {
 
@@ -58,15 +94,15 @@ public class XPosedModule implements IXposedHookLoadPackage {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 Log.d("LSPosedDebug", "Invoked: " + param.method);
-                writeLogToFile("Invoked: " + param.method);
+//                writeLogToFile("Invoked: " + param.method);
                 Log.d("LSPosedDebug", "Args: " + Arrays.toString(param.args));
-                writeLogToFile("Args: " + Arrays.toString(param.args));
+//                writeLogToFile("Args: " + Arrays.toString(param.args));
             }
 
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 Log.d("LSPosedDebug", "Result: " + param.getResult());
-                writeLogToFile("Result: " + param.getResult());
+//                writeLogToFile("Result: " + param.getResult());
             }
         };
     }
@@ -75,20 +111,8 @@ public class XPosedModule implements IXposedHookLoadPackage {
         JSONArray jsonParameters = hook.getJSONArray("parametersType");
         Object[] parametersAndHook = new Object[jsonParameters.length() + 1];   // as the last element will be the callback
         for (int i = 0; i < jsonParameters.length(); i++) {
-            // take ech parameterType as string
-            String parameterType = jsonParameters.getString(i);
-            // TODO: generalize this check with other types
-            switch (parameterType) {
-                case "byte[]":
-                    parametersAndHook[i] = byte[].class;
-                    break;
-                case "long":
-                    parametersAndHook[i] = long.class;
-                    break;
-                default:
-                    // in case is not a primitive type, the class is specified as a string
-                    parametersAndHook[i] = parameterType;
-            }
+            // take each parameterType as string
+            parametersAndHook[i] = jsonParameters.getString(i);
         }
         addCallback(parametersAndHook);
         return parametersAndHook;
