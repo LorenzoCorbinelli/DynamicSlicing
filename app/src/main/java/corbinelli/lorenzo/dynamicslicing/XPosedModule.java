@@ -9,6 +9,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
@@ -49,11 +51,6 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
   }
  */
 
-// TODO: modificare i log in modo da avere una struttura più a codice del tipo: tipo di ritorno - metodo(args)
-//  il metodo after con il valore di ritorno non serve per lo slice ma può essere usato come commento
-//  per dire che deve ritornare quel valore. Attualmente se result è un array stampa il riferimento e non il contenuto
-//  cosa che nel before è stata risolta con Arrays.deepToString avendo un array e non un oggetto.
-
 // TODO: tool che salva i log in un file: prende solo i log utili togliendo il resto. Controllare Log
 //  che probabilmente ha un metodo che stampa meno informazioni rispetto a debug (d)
 
@@ -72,8 +69,21 @@ public class XPosedModule implements IXposedHookLoadPackage {
         parametersAndHook[parametersAndHook.length - 1] = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                Log.d("LSPosedDebug", "Invoked: " + param.method);
-                Log.d("LSPosedDebug", "Args: " + Arrays.deepToString(param.args));
+                Member hockedMember = param.method;
+                String returnType;
+                if (hockedMember instanceof Method) {
+                    returnType = ((Method)hockedMember).getReturnType().getCanonicalName();
+                } else {    // hockedMember is a constructor
+                    returnType = hockedMember.getDeclaringClass().getCanonicalName();
+                }
+                String memberName = hockedMember.getName();
+                String args;
+                if (param.args.length == 0) {
+                    args = "";
+                } else {
+                    args = Arrays.deepToString(param.args);
+                }
+                Log.d("LSPosedDebug", returnType + " " + memberName + "(" + args + ")");
             }
 
             @Override
