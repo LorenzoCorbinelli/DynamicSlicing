@@ -1,12 +1,16 @@
 [
   {
-    "className": "okhttp3.OkHttpClient",
-    "methodName": "newCall",
-    "parametersType": ["okhttp3.Request"]
+    "className": "javax.crypto.spec.SecretKeySpec",
+    "parametersType": ["byte[]", "java.lang.String"]
   },
   {
-    "className": "okhttp3.ResponseBody",
-    "methodName": "string",
-    "parametersType": []
+    "className": "javax.crypto.Mac",
+    "methodName": "init",
+    "parametersType": ["java.security.Key"]
+  },
+  {
+    "className": "javax.crypto.Mac",
+    "methodName": "doFinal",
+    "parametersType": ["byte[]"]
   }
 ]

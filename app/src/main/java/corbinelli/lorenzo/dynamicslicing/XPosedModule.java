@@ -51,10 +51,9 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
   }
  */
 
-// TODO: tool che salva i log in un file: prende solo i log utili togliendo il resto. Controllare Log
-//  che probabilmente ha un metodo che stampa meno informazioni rispetto a debug (d)
-
 public class XPosedModule implements IXposedHookLoadPackage {
+
+    private static final String LOG_TAG = "LSPosedLog";
 
     private JSONArray readJSON() throws IOException, JSONException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("res/raw/hooks.json");
@@ -83,12 +82,12 @@ public class XPosedModule implements IXposedHookLoadPackage {
                 } else {
                     args = Arrays.deepToString(param.args);
                 }
-                Log.d("LSPosedDebug", returnType + " " + memberName + "(" + args + ")");
+                Log.i(LOG_TAG, returnType + " " + memberName + "(" + args + ")");
             }
 
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                Log.d("LSPosedDebug", "Result: " + param.getResult());
+                Log.i(LOG_TAG, "Result: " + param.getResult());
             }
         };
     }
