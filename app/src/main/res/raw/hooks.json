@@ -11,6 +11,6 @@
   {
     "className": "javax.crypto.Mac",
     "methodName": "doFinal",
-    "parametersType": ["byte[]"]
+    "parametersType": ["[B"]
   }
 ]

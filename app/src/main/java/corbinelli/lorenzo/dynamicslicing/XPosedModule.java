@@ -3,6 +3,8 @@ package corbinelli.lorenzo.dynamicslicing;
 import android.os.Build;
 import android.util.Log;
 
+import com.google.gson.Gson;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,7 +14,6 @@ import java.io.InputStream;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -37,7 +38,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
   }
   {
     "className": "javax.crypto.spec.SecretKeySpec",
-    "parametersType": ["byte[]", "java.lang.String"]
+    "parametersType": ["[B", "java.lang.String"]
   }
   {
     "className": "javax.crypto.Mac",
@@ -47,13 +48,14 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
   {
     "className": "javax.crypto.Mac",
     "methodName": "doFinal",
-    "parametersType": ["byte[]"]
+    "parametersType": ["[B"]
   }
  */
 
 public class XPosedModule implements IXposedHookLoadPackage {
 
     private static final String LOG_TAG = "LSPosedLog";
+    private final Gson gson = new Gson();
 
     private JSONArray readJSON() throws IOException, JSONException {
         InputStream is = getClass().getClassLoader().getResourceAsStream("res/raw/hooks.json");
@@ -76,18 +78,18 @@ public class XPosedModule implements IXposedHookLoadPackage {
                     returnType = hockedMember.getDeclaringClass().getCanonicalName();
                 }
                 String memberName = hockedMember.getName();
-                String args;
-                if (param.args.length == 0) {
-                    args = "";
-                } else {
-                    args = Arrays.deepToString(param.args);
-                }
+                String args = gson.toJson((param.args));
+                // take off the first [ and the last ]
+                args = args.substring(1, args.length() - 1);
                 Log.i(LOG_TAG, returnType + " " + memberName + "(" + args + ")");
             }
 
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                Log.i(LOG_TAG, "Result: " + param.getResult());
+                // only if the hooked member is a method
+                if (param.method instanceof Method) {
+                    Log.i(LOG_TAG, "Result: " + gson.toJson(param.getResult()));
+                }
             }
         };
     }
