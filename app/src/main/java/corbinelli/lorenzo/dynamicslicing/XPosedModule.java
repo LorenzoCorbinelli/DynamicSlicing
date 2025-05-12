@@ -4,6 +4,11 @@ import android.os.Build;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -66,6 +71,26 @@ public class XPosedModule implements IXposedHookLoadPackage {
         return new JSONArray(json);
     }
 
+    private void extractArgumentValues(Class<?> type, JsonElement jsonElement, StringBuilder args) {
+        if (jsonElement.isJsonObject()) {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            args.append(type.getSimpleName()).append("(");
+            for (String key : jsonObject.keySet()) {
+                try {
+                    type = type.getDeclaredField(key).getType();
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+                extractArgumentValues(type, jsonObject.get(key), args);
+            }
+            // take off the last comma and space
+            args.setLength(args.length() - 2);
+            args.append("), ");
+        } else {
+            args.append(jsonElement).append(", ");
+        }
+    }
+
     private void addCallback(Object[] parametersAndHook) {
         parametersAndHook[parametersAndHook.length - 1] = new XC_MethodHook() {
             @Override
@@ -78,9 +103,14 @@ public class XPosedModule implements IXposedHookLoadPackage {
                     returnType = hockedMember.getDeclaringClass().getCanonicalName();
                 }
                 String memberName = hockedMember.getName();
-                String args = gson.toJson((param.args));
-                // take off the first [ and the last ]
-                args = args.substring(1, args.length() - 1);
+                StringBuilder args = new StringBuilder();
+
+                for (Object obj : param.args) {
+                    JsonElement jsonElement = gson.toJsonTree(obj);
+                    extractArgumentValues(obj.getClass(), jsonElement, args);
+                }
+                // take off the last comma and space
+                args.setLength(args.length() - 2);
                 Log.i(LOG_TAG, returnType + " " + memberName + "(" + args + ")");
             }
 

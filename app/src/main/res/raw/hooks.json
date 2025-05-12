@@ -1,7 +1,7 @@
 [
   {
     "className": "javax.crypto.spec.SecretKeySpec",
-    "parametersType": ["byte[]", "java.lang.String"]
+    "parametersType": ["[B", "java.lang.String"]
   },
   {
     "className": "javax.crypto.Mac",
