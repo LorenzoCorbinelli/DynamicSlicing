@@ -4,11 +4,8 @@ import android.os.Build;
 import android.util.Log;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -72,12 +69,12 @@ public class XPosedModule implements IXposedHookLoadPackage {
     }
 
     private void extractArgumentValues(Class<?> type, JsonElement jsonElement, StringBuilder args) {
-        if (jsonElement.isJsonObject()) {
+        if (jsonElement.isJsonObject()) {   // it's an object
             JsonObject jsonObject = jsonElement.getAsJsonObject();
-            args.append(type.getSimpleName()).append("(");
+            args.append(type.getSimpleName()).append("(");  // object's type
             for (String key : jsonObject.keySet()) {
                 try {
-                    type = type.getDeclaredField(key).getType();
+                    type = type.getDeclaredField(key).getType();    // get the next argument's type
                 } catch(Exception e) {
                     e.printStackTrace();
                 }
@@ -86,7 +83,7 @@ public class XPosedModule implements IXposedHookLoadPackage {
             // take off the last comma and space
             args.setLength(args.length() - 2);
             args.append("), ");
-        } else {
+        } else {    // it's a raw element
             args.append(jsonElement).append(", ");
         }
     }
