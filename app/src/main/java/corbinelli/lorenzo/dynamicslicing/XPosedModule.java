@@ -4,6 +4,7 @@ import android.os.Build;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -70,21 +71,40 @@ public class XPosedModule implements IXposedHookLoadPackage {
 
     private void extractArgumentValues(Class<?> type, JsonElement jsonElement, StringBuilder args) {
         if (jsonElement.isJsonObject()) {   // it's an object
+            Log.d("LSPosedDebug", "TYPE: " + type);
             JsonObject jsonObject = jsonElement.getAsJsonObject();
-            args.append(type.getSimpleName()).append("(");  // object's type
+            args.append("new ").append(type.getSimpleName()).append("(");  // object's type
             for (String key : jsonObject.keySet()) {
                 try {
-                    type = type.getDeclaredField(key).getType();    // get the next argument's type
+                    Class<?> argumentType = type.getDeclaredField(key).getType();    // get the next argument's type
+                    extractArgumentValues(argumentType, jsonObject.get(key), args);
                 } catch(Exception e) {
-                    e.printStackTrace();
+                    Log.e("LSPosedDebug", "ArgumentValues error: " + Log.getStackTraceString(e));
                 }
-                extractArgumentValues(type, jsonObject.get(key), args);
             }
             // take off the last comma and space
             args.setLength(args.length() - 2);
             args.append("), ");
+        } else if (jsonElement.isJsonArray()) {
+            JsonArray jsonArray = jsonElement.getAsJsonArray();
+            args.append("new ").append(type.getSimpleName()).append("{");
+            for (int i = 0; i < jsonArray.size(); i++) {
+                extractArgumentValues(type.getComponentType(), jsonArray.get(i), args);
+            }
+            args.setLength(args.length() - 2);
+            args.append("}").append(", ");
         } else {    // it's a raw element
-            args.append(jsonElement).append(", ");
+            if (type.isArray()) {   // it's an array of primitives
+                //args.append("new ").append(type.getComponentType().getSimpleName()).append("()");
+                args.append("new ")
+                        .append(type.getSimpleName())
+                        .append("{")
+                        .append(jsonElement.toString().substring(1, jsonElement.toString().length() - 1))
+                        .append("}")
+                        .append(", ");
+            } else {
+                args.append(jsonElement).append(", ");
+            }
         }
     }
 
@@ -97,13 +117,14 @@ public class XPosedModule implements IXposedHookLoadPackage {
                 if (hockedMember instanceof Method) {
                     returnType = ((Method)hockedMember).getReturnType().getCanonicalName();
                 } else {    // hockedMember is a constructor
-                    returnType = hockedMember.getDeclaringClass().getCanonicalName();
+                    returnType = hockedMember.getDeclaringClass().getCanonicalName() + " new ";
                 }
                 String memberName = hockedMember.getName();
                 StringBuilder args = new StringBuilder();
 
                 for (Object obj : param.args) {
                     JsonElement jsonElement = gson.toJsonTree(obj);
+                    Log.d("LSPosedDebug", jsonElement.toString());
                     extractArgumentValues(obj.getClass(), jsonElement, args);
                 }
                 // take off the last comma and space
