@@ -69,42 +69,39 @@ public class XPosedModule implements IXposedHookLoadPackage {
         return new JSONArray(json);
     }
 
-    private void extractArgumentValues(Class<?> type, JsonElement jsonElement, StringBuilder args) {
-        if (jsonElement.isJsonObject()) {   // it's an object
-            Log.d("LSPosedDebug", "TYPE: " + type);
-            JsonObject jsonObject = jsonElement.getAsJsonObject();
-            args.append("new ").append(type.getSimpleName()).append("(");  // object's type
-            for (String key : jsonObject.keySet()) {
-                try {
-                    Class<?> argumentType = type.getDeclaredField(key).getType();    // get the next argument's type
-                    extractArgumentValues(argumentType, jsonObject.get(key), args);
-                } catch(Exception e) {
-                    Log.e("LSPosedDebug", "ArgumentValues error: " + Log.getStackTraceString(e));
-                }
+    private void extractObject(Class<?> type, JsonObject jsonObject, StringBuilder args) {
+        args.append("new ").append(type.getSimpleName()).append("(");  // object's type
+        for (String key : jsonObject.keySet()) {
+            try {
+                Class<?> argumentType = type.getDeclaredField(key).getType();    // get the field's type
+                extractArgumentValues(argumentType, jsonObject.get(key), args);
+            } catch(Exception e) {
+                Log.e("LSPosedDebug", "ArgumentValues error: " + Log.getStackTraceString(e));
             }
-            // take off the last comma and space
-            args.setLength(args.length() - 2);
-            args.append("), ");
+        }
+        // take off the last comma and space
+        args.setLength(args.length() - 2);
+        args.append("), ");
+    }
+
+    private void extractArray(Class<?> type, JsonArray jsonArray, StringBuilder args) {
+        args.append("new ").append(type.getSimpleName()).append("{");
+        for (int i = 0; i < jsonArray.size(); i++) {
+            extractArgumentValues(type.getComponentType(), jsonArray.get(i), args);
+        }
+        args.setLength(args.length() - 2);
+        args.append("}").append(", ");
+    }
+
+    private void extractArgumentValues(Class<?> type, JsonElement jsonElement, StringBuilder args) {
+        if (jsonElement.isJsonObject()) {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            extractObject(type, jsonObject, args);
         } else if (jsonElement.isJsonArray()) {
             JsonArray jsonArray = jsonElement.getAsJsonArray();
-            args.append("new ").append(type.getSimpleName()).append("{");
-            for (int i = 0; i < jsonArray.size(); i++) {
-                extractArgumentValues(type.getComponentType(), jsonArray.get(i), args);
-            }
-            args.setLength(args.length() - 2);
-            args.append("}").append(", ");
+            extractArray(type, jsonArray, args);
         } else {    // it's a raw element
-            if (type.isArray()) {   // it's an array of primitives
-                //args.append("new ").append(type.getComponentType().getSimpleName()).append("()");
-                args.append("new ")
-                        .append(type.getSimpleName())
-                        .append("{")
-                        .append(jsonElement.toString().substring(1, jsonElement.toString().length() - 1))
-                        .append("}")
-                        .append(", ");
-            } else {
-                args.append(jsonElement).append(", ");
-            }
+            args.append(jsonElement).append(", ");
         }
     }
 
@@ -124,7 +121,6 @@ public class XPosedModule implements IXposedHookLoadPackage {
 
                 for (Object obj : param.args) {
                     JsonElement jsonElement = gson.toJsonTree(obj);
-                    Log.d("LSPosedDebug", jsonElement.toString());
                     extractArgumentValues(obj.getClass(), jsonElement, args);
                 }
                 // take off the last comma and space
