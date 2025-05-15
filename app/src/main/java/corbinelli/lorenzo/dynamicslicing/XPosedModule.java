@@ -85,7 +85,7 @@ public class XPosedModule implements IXposedHookLoadPackage {
     }
 
     private void extractArray(Class<?> type, JsonArray jsonArray, StringBuilder args) {
-        args.append("new ").append(type.getSimpleName()).append("{");
+        args.append("new ").append(type.getSimpleName()).append("{"); // array's type
         for (int i = 0; i < jsonArray.size(); i++) {
             extractArgumentValues(type.getComponentType(), jsonArray.get(i), args);
         }
@@ -132,7 +132,7 @@ public class XPosedModule implements IXposedHookLoadPackage {
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 // only if the hooked member is a method
                 if (param.method instanceof Method) {
-                    Log.i(LOG_TAG, "Result: " + gson.toJson(param.getResult()));
+                    Log.i(LOG_TAG, "// Result: " + gson.toJson(param.getResult()));
                 }
             }
         };
