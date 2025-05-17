@@ -1,6 +1,5 @@
 package corbinelli.lorenzo.dynamicslicing;
 
-import android.os.Build;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -11,10 +10,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -58,15 +55,7 @@ public class XPosedModule implements IXposedHookLoadPackage {
     private static final String LOG_TAG = "LSPosedLog";
     private final Gson gson = new Gson();
     private final ArgumentValuesExtractor argumentValuesExtractor = new ArgumentValuesExtractor();
-
-    private JSONArray readJSON() throws IOException, JSONException {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("res/raw/hooks.json");
-        String json = "";
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-        }
-        return new JSONArray(json);
-    }
+    private final JSONReader JSONReader = new JSONReader("res/raw/hooks.json");
 
     private void addCallback(Object[] parametersAndHook) {
         parametersAndHook[parametersAndHook.length - 1] = new XC_MethodHook() {
@@ -117,7 +106,7 @@ public class XPosedModule implements IXposedHookLoadPackage {
         Log.d("LSPosedDebug", "Hooking into " + lpparam.packageName);
 
         try {
-            JSONArray jsonArray = readJSON();
+            JSONArray jsonArray = JSONReader.readJSON();
 
             for (int i = 0; i < jsonArray.length(); i++) {
                 // take each element in the json
@@ -138,7 +127,6 @@ public class XPosedModule implements IXposedHookLoadPackage {
                             parametersAndHook
                     );
                 }
-
             }
         } catch(Throwable e) {
             Log.e("LSPosedDebug", "LSPosed Error: " + Log.getStackTraceString(e));
