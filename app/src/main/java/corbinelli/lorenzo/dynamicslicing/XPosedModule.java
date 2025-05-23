@@ -9,6 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 
@@ -55,18 +56,19 @@ public class XPosedModule implements IXposedHookLoadPackage {
     private final Gson gson = new Gson();
     private final ArgumentValuesExtractor argumentValuesExtractor = new ArgumentValuesExtractor();
     private final JSONReader JSONReader = new JSONReader("res/raw/hooks.json");
+    private final VariableName variableName = VariableName.getInstance();
 
     private void addCallback(Object[] parametersAndHook) {
         parametersAndHook[parametersAndHook.length - 1] = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 Member hockedMember = param.method;
-                String returnType;
-                if (hockedMember instanceof Method) {
-                    returnType = ((Method)hockedMember).getReturnType().getCanonicalName();
-                } else {    // hockedMember is a constructor
-                    returnType = hockedMember.getDeclaringClass().getCanonicalName() + " new ";
+                String returnType = "";
+                if (hockedMember instanceof Constructor) {
+                    returnType = hockedMember.getDeclaringClass().getCanonicalName()
+                            + " " + variableName.getVariableName() + " = new ";
                 }
+
                 String memberName = hockedMember.getName();
                 StringBuilder args = new StringBuilder();
 
@@ -76,7 +78,8 @@ public class XPosedModule implements IXposedHookLoadPackage {
                 }
                 // take off the last comma and space
                 args.setLength(args.length() - 2);
-                Log.i(LOG_TAG, returnType + " " + memberName + "(" + args + ")");
+
+                Log.i(LOG_TAG, returnType + memberName + "(" + args + ");");
             }
 
             @Override
