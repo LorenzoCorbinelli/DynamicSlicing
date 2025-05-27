@@ -15,20 +15,25 @@ public class ArgumentValuesExtractor {
 
     public void extractArgumentValues(Class<?> type, JsonElement jsonElement, StringBuilder args) {
         if (jsonElement.isJsonObject() || jsonElement.isJsonArray()) {
-            if (!flag) {
-                Log.i("LSPosedLog", "Gson gson = new Gson();");
-                flag = true;
-            }
-            String varName = variableName.getVariableName();
-            Log.i("LSPosedLog", type.getCanonicalName()
-                    + " "
-                    + varName
-                    + "  = gson.fromJson(\""
-                    + escapeJson(jsonElement.toString())
-                    + "\", " + type.getCanonicalName() + ".class);");
+            String varName = getVarNameAndLogSerialization(type, jsonElement);
             args.append(varName).append(", ");
         } else {    // it's a raw element
             args.append(jsonElement).append(", ");
         }
+    }
+
+    public String getVarNameAndLogSerialization(Class<?> type, JsonElement jsonElement) {
+        if (!flag) {
+            Log.i("LSPosedLog", "Gson gson = new Gson();");
+            flag = true;
+        }
+        String varName = variableName.getVariableName();
+        Log.i("LSPosedLog", type.getCanonicalName()
+                + " "
+                + varName
+                + "  = gson.fromJson(\""
+                + escapeJson(jsonElement.toString())
+                + "\", " + type.getCanonicalName() + ".class);");
+        return varName;
     }
 }

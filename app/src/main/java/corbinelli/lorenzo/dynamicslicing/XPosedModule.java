@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -50,6 +51,11 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
   }
  */
 
+// TODO: gestire le chiamate di metodi su oggetti. Provare ad utilizzare param.thisObject.
+//  Come faccio a relazionare una variabile con una successiva chiamata?
+//  Es loggo String x1 = new String() e poi chiamo il metodo substring,
+//  come faccio a sapere che si riferisce a x1 e quindi loggare x1.substring?
+
 public class XPosedModule implements IXposedHookLoadPackage {
 
     private static final String LOG_TAG = "LSPosedLog";
@@ -63,10 +69,20 @@ public class XPosedModule implements IXposedHookLoadPackage {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 Member hockedMember = param.method;
-                String returnType = "";
+                String beforeMemberName = "";
                 if (hockedMember instanceof Constructor) {
-                    returnType = hockedMember.getDeclaringClass().getCanonicalName()
+                    beforeMemberName = hockedMember.getDeclaringClass().getCanonicalName()
                             + " " + variableName.getVariableName() + " = new ";
+                } else {    // it's a method
+                    Method method = (Method)hockedMember;
+                    if (Modifier.isStatic(method.getModifiers())) {
+                        beforeMemberName = method.getDeclaringClass().getCanonicalName();
+                    } else {
+                        JsonElement jsonElement = gson.toJsonTree(param.thisObject);
+                        beforeMemberName = argumentValuesExtractor
+                                .getVarNameAndLogSerialization(param.thisObject.getClass(), jsonElement);
+                    }
+                    beforeMemberName += ".";
                 }
 
                 String memberName = hockedMember.getName();
@@ -79,7 +95,7 @@ public class XPosedModule implements IXposedHookLoadPackage {
                 // take off the last comma and space
                 args.setLength(args.length() - 2);
 
-                Log.i(LOG_TAG, returnType + memberName + "(" + args + ");");
+                Log.i(LOG_TAG, beforeMemberName + memberName + "(" + args + ");");
             }
 
             @Override
