@@ -2,9 +2,6 @@ package corbinelli.lorenzo.dynamicslicing;
 
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,16 +48,10 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
   }
  */
 
-// TODO: gestire le chiamate di metodi su oggetti. Provare ad utilizzare param.thisObject.
-//  Come faccio a relazionare una variabile con una successiva chiamata?
-//  Es loggo String x1 = new String() e poi chiamo il metodo substring,
-//  come faccio a sapere che si riferisce a x1 e quindi loggare x1.substring?
-
 public class XPosedModule implements IXposedHookLoadPackage {
 
     private static final String LOG_TAG = "LSPosedLog";
-    private final Gson gson = new Gson();
-    private final ArgumentValuesExtractor argumentValuesExtractor = new ArgumentValuesExtractor();
+    private final Serializer serializer = new Serializer();
     private final JSONReader JSONReader = new JSONReader("res/raw/hooks.json");
     private final VariableName variableName = VariableName.getInstance();
 
@@ -76,11 +67,11 @@ public class XPosedModule implements IXposedHookLoadPackage {
                 } else {    // it's a method
                     Method method = (Method)hockedMember;
                     if (Modifier.isStatic(method.getModifiers())) {
+                        // take the class name
                         beforeMemberName = method.getDeclaringClass().getCanonicalName();
                     } else {
-                        JsonElement jsonElement = gson.toJsonTree(param.thisObject);
-                        beforeMemberName = argumentValuesExtractor
-                                .getVarNameAndLogSerialization(param.thisObject.getClass(), jsonElement);
+                        // serialize the "this" reference
+                        beforeMemberName = serializer.logObjectSerialization(param.thisObject);
                     }
                     beforeMemberName += ".";
                 }
@@ -88,9 +79,8 @@ public class XPosedModule implements IXposedHookLoadPackage {
                 String memberName = hockedMember.getName();
                 StringBuilder args = new StringBuilder();
 
-                for (Object obj : param.args) {
-                    JsonElement jsonElement = gson.toJsonTree(obj);
-                    argumentValuesExtractor.extractArgumentValues(obj.getClass(), jsonElement, args);
+                for (Object arg : param.args) {
+                    serializer.extractArgumentValues(arg, args);
                 }
                 // take off the last comma and space
                 args.setLength(args.length() - 2);
@@ -102,7 +92,7 @@ public class XPosedModule implements IXposedHookLoadPackage {
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 // only if the hooked member is a method
                 if (param.method instanceof Method) {
-                    Log.i(LOG_TAG, "// Result: " + gson.toJson(param.getResult()));
+                    Log.i(LOG_TAG, "// Result: " + serializer.serializeObject(param.getResult()));
                 }
             }
         };
