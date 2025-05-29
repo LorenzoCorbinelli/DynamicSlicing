@@ -16,6 +16,6 @@ public final class VariableName {
     }
 
     public String getVariableName() {
-        return variableName + ++variableNumber;
+        return variableName + variableNumber++;
     }
 }
