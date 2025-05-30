@@ -10,6 +10,11 @@ public class Serializer {
     private boolean flag = false;
     private final VariableName variableName = VariableName.getInstance();
     private final Gson gson = new Gson();
+    private final String logTag;
+
+    public Serializer(String logTag) {
+        this.logTag = logTag;
+    }
 
     private String escapeJson(String json) {
         return json.replace("\"", "\\\"");
@@ -52,11 +57,11 @@ public class Serializer {
 
     private String getVarNameAndLogSerialization(Class<?> type, JsonElement jsonElement) {
         if (!flag) {
-            Log.i("LSPosedLog", "Gson gson = new Gson();");
+            Log.i(logTag, "Gson gson = new Gson();");
             flag = true;
         }
         String varName = variableName.getVariableName();
-        Log.i("LSPosedLog", type.getCanonicalName()
+        Log.i(logTag, type.getCanonicalName()
                 + " "
                 + varName
                 + "  = gson.fromJson(\""

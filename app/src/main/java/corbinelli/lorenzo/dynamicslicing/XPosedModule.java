@@ -51,7 +51,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 public class XPosedModule implements IXposedHookLoadPackage {
 
     private static final String LOG_TAG = "LSPosedLog";
-    private final Serializer serializer = new Serializer();
+    private final Serializer serializer = new Serializer(LOG_TAG);
     private final JSONReader JSONReader = new JSONReader("res/raw/hooks.json");
     private final VariableName variableName = VariableName.getInstance();
 
