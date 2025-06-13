@@ -83,7 +83,9 @@ public class XPosedModule implements IXposedHookLoadPackage {
                     serializer.extractArgumentValues(arg, args);
                 }
                 // take off the last comma and space
-                args.setLength(args.length() - 2);
+                if (args.length() > 2) {
+                    args.setLength(args.length() - 2);
+                }
 
                 Log.i(LOG_TAG, beforeMemberName + memberName + "(" + args + ");");
             }
