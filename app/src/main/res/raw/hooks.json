@@ -1,12 +1,7 @@
 [
   {
-    "className": "javax.crypto.Mac",
-    "methodName": "init",
-    "parametersType": ["java.security.Key"]
-  },
-  {
-    "className": "javax.crypto.Mac",
-    "methodName": "doFinal",
-    "parametersType": ["[B"]
+    "className": "",
+    "methodName": "",
+    "parametersType": []
   }
 ]

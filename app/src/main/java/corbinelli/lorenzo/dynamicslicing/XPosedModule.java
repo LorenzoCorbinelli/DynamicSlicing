@@ -16,38 +16,6 @@ import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
-/*
-  {
-    "className": "java.net.URL",
-    "methodName": "openStream",
-    "parametersType": []
-  }
-  {
-    "className": "android.net.Uri.Builder",
-    "methodName": "build",
-    "parametersType": []
-  }
-  {
-    "className": "okhttp3.OkHttpClient",
-    "methodName": "newCall",
-    "parametersType": ["okhttp3.Request"]
-  }
-  {
-    "className": "javax.crypto.spec.SecretKeySpec",
-    "parametersType": ["[B", "java.lang.String"]
-  }
-  {
-    "className": "javax.crypto.Mac",
-    "methodName": "init",
-    "parametersType": ["java.security.Key"]
-  }
-  {
-    "className": "javax.crypto.Mac",
-    "methodName": "doFinal",
-    "parametersType": ["[B"]
-  }
- */
-
 public class XPosedModule implements IXposedHookLoadPackage {
 
     private static final String LOG_TAG = "LSPosedLog";
